@@ -241,6 +241,9 @@ class Summary:
         output += "Note: log into your key using 'chia wallet show' to see rewards for each key"
         return output
 
+    def to_json(self):
+        return vars(self)
+
 
 async def summary(rpc_port: int, wallet_rpc_port: int, harvester_rpc_port: int, farmer_rpc_port: int) -> Summary:
     amounts = await get_wallets_stats(wallet_rpc_port)
