@@ -32,8 +32,8 @@ class ChiaCollector:
             if name == "status":
                 value = self.farm_status[value]
             yield GaugeMetricFamily(f"chia_farm_summary_{name}", f"chia_farm_summary_{name}", value=value)
-            stdout = subprocess.check_output(["plotman", "status"]).decode("utf-8")
-            yield GaugeMetricFamily("chia_farm_summary_plots_in_progress", "plotman_jobs_count", value=stdout.count("/mnt/plotter"))
+            #stdout = subprocess.check_output(["plotman", "status"]).decode("utf-8")
+            #yield GaugeMetricFamily("chia_farm_summary_plots_in_progress", "plotman_jobs_count", value=stdout.count("/mnt/plotter"))
 
 
 if __name__ == "__main__":
