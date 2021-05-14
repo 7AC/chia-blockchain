@@ -132,7 +132,7 @@ class Blockchain(BlockchainInterface):
         if len(block_records) == 0:
             assert peak is None
             self._peak_height = None
-            return
+            return None
 
         assert peak is not None
         self._peak_height = self.block_record(peak).height
@@ -594,7 +594,7 @@ class Blockchain(BlockchainInterface):
 
         """
         if self._peak_height is None:
-            return
+            return None
         block_records = await self.block_store.get_block_records_in_range(
             max(fork_point - self.constants.BLOCKS_CACHE_SIZE, uint32(0)), fork_point
         )
@@ -608,7 +608,7 @@ class Blockchain(BlockchainInterface):
             height: Minimum height that we need to keep in the cache
         """
         if height < 0:
-            return
+            return None
         blocks_to_remove = self.__heights_in_cache.get(uint32(height), None)
         while blocks_to_remove is not None and height >= 0:
             for header_hash in blocks_to_remove:
@@ -626,18 +626,20 @@ class Blockchain(BlockchainInterface):
         """
 
         if len(self.__block_records) < self.constants.BLOCKS_CACHE_SIZE:
-            return
+            return None
 
         peak = self.get_peak()
         assert peak is not None
         if peak.height - self.constants.BLOCKS_CACHE_SIZE < 0:
-            return
+            return None
         self.clean_block_record(peak.height - self.constants.BLOCKS_CACHE_SIZE)
 
     async def get_block_records_in_range(self, start: int, stop: int) -> Dict[bytes32, BlockRecord]:
         return await self.block_store.get_block_records_in_range(start, stop)
 
-    async def get_header_blocks_in_range(self, start: int, stop: int) -> Dict[bytes32, HeaderBlock]:
+    async def get_header_blocks_in_range(
+        self, start: int, stop: int, tx_filter: bool = True
+    ) -> Dict[bytes32, HeaderBlock]:
         hashes = []
         for height in range(start, stop + 1):
             if self.contains_height(uint32(height)):
@@ -657,19 +659,24 @@ class Blockchain(BlockchainInterface):
         for block in blocks:
             if self.height_to_hash(block.height) != block.header_hash:
                 raise ValueError(f"Block at {block.header_hash} is no longer in the blockchain (it's in a fork)")
-            tx_additions: List[CoinRecord] = [
-                c for c in (await self.coin_store.get_coins_added_at_height(block.height)) if not c.coinbase
-            ]
-            removed: List[CoinRecord] = await self.coin_store.get_coins_removed_at_height(block.height)
-            header = get_block_header(
-                block, [record.coin for record in tx_additions], [record.coin.name() for record in removed]
-            )
+            if tx_filter is False:
+                header = get_block_header(block, [], [])
+            else:
+                tx_additions: List[CoinRecord] = [
+                    c for c in (await self.coin_store.get_coins_added_at_height(block.height)) if not c.coinbase
+                ]
+                removed: List[CoinRecord] = await self.coin_store.get_coins_removed_at_height(block.height)
+                header = get_block_header(
+                    block, [record.coin for record in tx_additions], [record.coin.name() for record in removed]
+                )
             header_blocks[header.header_hash] = header
 
         return header_blocks
 
-    async def get_header_block_by_height(self, height: int, header_hash: bytes32) -> Optional[HeaderBlock]:
-        header_dict: Dict[bytes32, HeaderBlock] = await self.get_header_blocks_in_range(height, height)
+    async def get_header_block_by_height(
+        self, height: int, header_hash: bytes32, tx_filter: bool = True
+    ) -> Optional[HeaderBlock]:
+        header_dict: Dict[bytes32, HeaderBlock] = await self.get_header_blocks_in_range(height, height, tx_filter)
         if len(header_dict) == 0:
             return None
         if header_hash not in header_dict:
