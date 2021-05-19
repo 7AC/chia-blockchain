@@ -8,7 +8,7 @@ import subprocess
 
 
 # TODO: parametrize
-CHIA_HTTP_SERVER = "http://localhost:5000/api/farm/summary"
+CHIA_HTTP_SERVER = "http://qnap:5000/api/farm/summary"
 
 
 class ChiaCollector:
