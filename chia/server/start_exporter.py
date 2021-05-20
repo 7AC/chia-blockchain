@@ -37,7 +37,9 @@ class ChiaCollector:
 
 
 if __name__ == "__main__":
-    start_http_server(8000)
+    port = 8000
+    start_http_server(port)
     REGISTRY.register(ChiaCollector(CHIA_HTTP_SERVER))
+    print(f"Listening on port {port}")
     while True:
         time.sleep(1)
