@@ -25,7 +25,8 @@ dependencies = [
     "click==7.1.2",  # For the CLI
     "flask==1.1.2",
     "prometheus-client==0.10.1",
-    "requests==2.22.0"
+    "requests==2.22.0",
+    "dnspython==2.1.0"  # Query DNS seeds
 ]
 
 upnp_dependencies = [
